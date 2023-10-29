@@ -14,11 +14,11 @@ public class BezierCurve {
 
     private final LinkedList<Point2D> points;
 
-    private double[] combinations;
+    private final Color color;
+
+    private long[] combinations;
 
     private int curveDegree;
-
-    private Color color;
 
     public BezierCurve() {
         this.curveDegree = -1;
@@ -38,17 +38,19 @@ public class BezierCurve {
         this.points = new LinkedList<>();
         this.points.addAll(points);
 
+        this.color = DEFAULT_COLOR;
+
         recountCombinations();
     }
 
     private void recountCombinations() {
-        double combination = 1;
+        long combination = 1;
         int countCombinations = curveDegree / 2 + 1;
 
-        combinations = new double[countCombinations];
+        combinations = new long[countCombinations];
         for (int i = 0; i < countCombinations; i++) {
             combinations[i] = combination;
-            combination *= (curveDegree - i) / (i + 1.0);
+            combination = combination * (curveDegree - i) / (i + 1);
         }
     }
 
@@ -83,7 +85,7 @@ public class BezierCurve {
         recountCombinations();
     }
 
-    public void drawLine(PixelWriter pixelWriter) {
+    public void draw(PixelWriter pixelWriter) {
         Point2D lastPoint = null;
 
         for (double i = 0; i < STEPS; i++) {

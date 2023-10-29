@@ -1,11 +1,12 @@
 package com.cgvsu.protocurvefxapp;
 
 import com.cgvsu.protocurvefxapp.draw_elements.BezierCurve;
+import com.cgvsu.protocurvefxapp.draw_elements.PolygonalChain;
 import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.PixelWriter;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
@@ -19,9 +20,9 @@ public class ProtoCurveController {
     @FXML
     private Canvas canvas;
 
-    private PixelWriter pixelWriter;
-
     private BezierCurve curve;
+
+    private PolygonalChain polygonalChain;
 
     private ArrayList<Point2D> points = new ArrayList<>();
 
@@ -36,15 +37,20 @@ public class ProtoCurveController {
             }
         });
 
-        pixelWriter = canvas.getGraphicsContext2D().getPixelWriter();
+        canvas.addEventHandler(KeyEvent.KEY_PRESSED, (key) -> {
+            System.out.println(key.getText());
+        });
+
         curve = new BezierCurve(Color.BLUE);
+        polygonalChain = new PolygonalChain(Color.RED);
     }
 
     private void handlePrimaryClick(GraphicsContext graphicsContext, MouseEvent event) {
         final Point2D clickPoint = new Point2D(event.getX(), event.getY());
 
-        points.add(clickPoint);
+//        points.add(clickPoint);
         curve.addPoint(clickPoint);
+        polygonalChain.addPoint(clickPoint);
 
         redraw();
     }
@@ -53,14 +59,7 @@ public class ProtoCurveController {
         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
 
         graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        curve.drawLine(graphicsContext.getPixelWriter());
-
-        final int POINT_RADIUS = 3;
-        for (Point2D point : points) {
-            graphicsContext.fillOval(
-                    point.getX() - POINT_RADIUS, point.getY() - POINT_RADIUS,
-                    2 * POINT_RADIUS, 2 * POINT_RADIUS
-            );
-        }
+        curve.draw(graphicsContext.getPixelWriter());
+        polygonalChain.draw(graphicsContext);
     }
 }
