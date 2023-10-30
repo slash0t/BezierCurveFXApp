@@ -6,7 +6,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
@@ -20,6 +19,8 @@ public class ProtoCurveController {
     @FXML
     private Canvas canvas;
 
+    private PixelPrinter pixelPrinter;
+
     private BezierCurve curve;
 
     private PolygonalChain polygonalChain;
@@ -28,24 +29,43 @@ public class ProtoCurveController {
 
     @FXML
     private void initialize() {
+        canvas.setFocusTraversable(true);
+
+        pixelPrinter = new JavaFXPixelPrinter(canvas.getGraphicsContext2D().getPixelWriter());
+
         anchorPane.prefWidthProperty().addListener((ov, oldValue, newValue) -> canvas.setWidth(newValue.doubleValue()));
         anchorPane.prefHeightProperty().addListener((ov, oldValue, newValue) -> canvas.setHeight(newValue.doubleValue()));
 
         canvas.setOnMouseClicked(event -> {
             switch (event.getButton()) {
-                case PRIMARY -> handlePrimaryClick(canvas.getGraphicsContext2D(), event);
+                case PRIMARY -> handlePrimaryClick(event);
             }
         });
 
-        canvas.addEventHandler(KeyEvent.KEY_PRESSED, (key) -> {
-            System.out.println(key.getText());
+        canvas.setOnKeyPressed(keyEvent -> {
+            switch (keyEvent.getCode()) {
+                case Z:
+                    polygonalChain.changeSegmentsVisibility();
+                    redraw();
+                    break;
+                case X:
+                    polygonalChain.changeVertexVisibility();
+                    redraw();
+                    break;
+                case SPACE:
+                    polygonalChain.clear();
+                    curve.clear();
+                    points.clear();
+                    redraw();
+                    break;
+            }
         });
 
         curve = new BezierCurve(Color.BLUE);
         polygonalChain = new PolygonalChain(Color.RED);
     }
 
-    private void handlePrimaryClick(GraphicsContext graphicsContext, MouseEvent event) {
+    private void handlePrimaryClick(MouseEvent event) {
         final Point2D clickPoint = new Point2D(event.getX(), event.getY());
 
 //        points.add(clickPoint);
@@ -59,7 +79,8 @@ public class ProtoCurveController {
         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
 
         graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        curve.draw(graphicsContext.getPixelWriter());
-        polygonalChain.draw(graphicsContext);
+
+        curve.draw(pixelPrinter);
+        polygonalChain.draw(graphicsContext, pixelPrinter);
     }
 }

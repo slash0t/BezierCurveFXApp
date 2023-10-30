@@ -1,6 +1,6 @@
 package com.cgvsu.protocurvefxapp.draw_elements;
 
-import javafx.scene.image.PixelWriter;
+import com.cgvsu.protocurvefxapp.PixelPrinter;
 import javafx.scene.paint.Color;
 
 public final class BresenhamLine {
@@ -10,26 +10,26 @@ public final class BresenhamLine {
 
     }
 
-    public static void drawLine(int x1, int y1, int x2, int y2, PixelWriter pw) {
+    public static void drawLine(int x1, int y1, int x2, int y2, PixelPrinter pixelPrinter) {
         drawLine(
                 x1, y1,
                 x2, y2,
-                pw, DEFAULT_COLOR
+                pixelPrinter, DEFAULT_COLOR
         );
     }
 
-    public static void drawLine(int x1, int y1, int x2, int y2, PixelWriter pw, Color color) {
+    public static void drawLine(int x1, int y1, int x2, int y2, PixelPrinter pixelPrinter, Color color) {
         int deltaX = Math.abs(x1 - x2);
         int deltaY = Math.abs(y1 - y2);
 
         if (deltaX > deltaY) {
-            drawLineXMain(x1, y1, x2, y2, pw, color);
+            drawLineXMain(x1, y1, x2, y2, pixelPrinter, color);
         } else {
-            drawLineYMain(x1, y1, x2, y2, pw, color);
+            drawLineYMain(x1, y1, x2, y2, pixelPrinter, color);
         }
     }
 
-    private static void drawLineXMain(int x1, int y1, int x2, int y2, PixelWriter pw, Color color) {
+    private static void drawLineXMain(int x1, int y1, int x2, int y2, PixelPrinter pixelPrinter, Color color) {
         if (x1 > x2) {
             int temp = x2;
             x2 = x1;
@@ -55,7 +55,7 @@ public final class BresenhamLine {
         }
 
         for (int x = x1; x <= x2; x++) {
-            pw.setColor(x, y, color);
+            pixelPrinter.putPixel(x, y, color);
             error += deltaError;
 
             if (error >= deltaX + 1) {
@@ -65,7 +65,7 @@ public final class BresenhamLine {
         }
     }
 
-    private static void drawLineYMain(int x1, int y1, int x2, int y2, PixelWriter pw, Color color) {
+    private static void drawLineYMain(int x1, int y1, int x2, int y2, PixelPrinter pixelPrinter, Color color) {
         if (y1 > y2) {
             int temp = y2;
             y2 = y1;
@@ -91,7 +91,7 @@ public final class BresenhamLine {
         }
 
         for (int y = y1; y <= y2; y++) {
-            pw.setColor(x, y, color);
+            pixelPrinter.putPixel(x, y, color);
             error += deltaError;
 
             if (error >= deltaY + 1) {

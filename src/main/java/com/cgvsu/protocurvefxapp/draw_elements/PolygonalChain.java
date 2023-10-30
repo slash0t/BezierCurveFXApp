@@ -1,5 +1,6 @@
 package com.cgvsu.protocurvefxapp.draw_elements;
 
+import com.cgvsu.protocurvefxapp.PixelPrinter;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelWriter;
@@ -59,7 +60,15 @@ public class PolygonalChain {
         points.add(point);
     }
 
-    public void draw(GraphicsContext graphicsContext) {
+    public void clear() {
+        points.clear();
+    }
+
+    public void draw(GraphicsContext graphicsContext, PixelPrinter pixelPrinter) {
+        if (points.size() < 1) {
+            return;
+        }
+
         PixelWriter pixelWriter = graphicsContext.getPixelWriter();
 
         if (areSegmentsVisible) {
@@ -72,7 +81,7 @@ public class PolygonalChain {
                 BresenhamLine.drawLine(
                         (int) lastPoint.getX(), (int) lastPoint.getY(),
                         (int) point.getX(), (int) point.getY(),
-                        pixelWriter, segmentColor
+                        pixelPrinter, segmentColor
                 );
 
                 lastPoint = point;
