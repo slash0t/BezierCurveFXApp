@@ -77,6 +77,22 @@ public class BezierCurve {
         recountCombinations();
     }
 
+    private Point2D countPoint(double t) {
+        double[] baseCoefficient = countBaseCoefficients(t);
+
+        double x = 0, y = 0;
+        Iterator<Point2D> iterator = points.iterator();
+        for (int j = 0; j <= curveDegree; j++) {
+            double combination = combinations[Math.min(curveDegree - j, j)];
+            double currBase = baseCoefficient[j] * combination;
+
+            Point2D point = iterator.next();
+            x += point.getX() * currBase;
+            y += point.getY() * currBase;
+        }
+        return new Point2D(x, y);
+    }
+
     public void draw(PixelPrinter pixelPrinter) {
         Stack<Double> drawStack = new Stack<>();
 
@@ -86,42 +102,41 @@ public class BezierCurve {
         Point2D lastPoint = null;
         double lastT = 0;
 
+        HashMap<Double, Point2D> calculatedPoints = new HashMap<>();
+
         while (drawStack.size() > 0) {
             double currT = drawStack.pop();
 
-            double[] baseCoefficient = countBaseCoefficients(currT);
-
-            double x = 0, y = 0;
-            Iterator<Point2D> iterator = points.iterator();
-            for (int j = 0; j <= curveDegree; j++) {
-                double combination = combinations[Math.min(curveDegree - j, j)];
-                double currBase = baseCoefficient[j] * combination;
-
-                Point2D point = iterator.next();
-                x += point.getX() * currBase;
-                y += point.getY() * currBase;
+            Point2D currPoint;
+            if (calculatedPoints.containsKey(currT)) {
+                currPoint = calculatedPoints.remove(currT);
+            } else {
+                currPoint = countPoint(currT);
             }
 
-            if (lastPoint != null) {
-                double xDif = x - lastPoint.getX();
-                double yDif = y - lastPoint.getY();
-                double segmentSize = Math.sqrt(xDif * xDif + yDif * yDif);
-
-                if (segmentSize > MAX_DISTANCE) {
-                    drawStack.add(currT);
-                    drawStack.add((lastT + currT) / 2);
-                } else {
-                    BresenhamLine.drawLine(
-                            round(lastPoint.getX()), round(lastPoint.getY()),
-                            round(x), round(y),
-                            pixelPrinter, color
-                    );
-
-                    lastT = currT;
-                }
+            if (lastPoint == null) {
+                lastPoint = currPoint;
+                continue;
             }
-            if (drawStack.size() > 0 && drawStack.peek() > currT) {
-                lastPoint = new Point2D(x, y);
+
+            double xDif = currPoint.getX() - lastPoint.getX();
+            double yDif = currPoint.getY() - lastPoint.getY();
+            double segmentSize = Math.sqrt(xDif * xDif + yDif * yDif);
+
+            if (segmentSize > MAX_DISTANCE) {
+                drawStack.add(currT);
+                drawStack.add((lastT + currT) / 2);
+
+                calculatedPoints.put(currT, currPoint);
+            } else {
+                BresenhamLine.drawLine(
+                        round(lastPoint.getX()), round(lastPoint.getY()),
+                        round(currPoint.getX()), round(currPoint.getY()),
+                        pixelPrinter, color
+                );
+
+                lastT = currT;
+                lastPoint = currPoint;
             }
         }
     }
