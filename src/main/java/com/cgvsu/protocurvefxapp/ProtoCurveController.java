@@ -61,8 +61,12 @@ public class ProtoCurveController {
             }
         });
 
-        curve = new BezierCurve(Color.BLUE);
-        polygonalChain = new PolygonalChain(Color.RED);
+        curve = new BezierCurve.Builder()
+                .withColor(Color.BLUE)
+                .build();
+        polygonalChain = new PolygonalChain.Builder()
+                .withColor(Color.RED)
+                .build();
     }
 
     private void handlePrimaryClick(MouseEvent event) {

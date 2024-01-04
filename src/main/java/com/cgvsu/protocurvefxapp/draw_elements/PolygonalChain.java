@@ -3,7 +3,6 @@ package com.cgvsu.protocurvefxapp.draw_elements;
 import com.cgvsu.protocurvefxapp.PixelPrinter;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
@@ -21,28 +20,10 @@ public class PolygonalChain {
     private boolean isVertexVisible;
     private boolean areSegmentsVisible;
 
-    public PolygonalChain() {
+    private PolygonalChain(Builder builder) {
         this.points = new LinkedList<>();
-        this.vertexColor = DEFAULT_COLOR;
-        this.segmentColor = DEFAULT_COLOR;
-
-        this.isVertexVisible = true;
-        this.areSegmentsVisible = true;
-    }
-
-    public PolygonalChain(Color color) {
-        this.points = new LinkedList<>();
-        this.vertexColor = color;
-        this.segmentColor = color;
-
-        this.isVertexVisible = true;
-        this.areSegmentsVisible = true;
-    }
-
-    public PolygonalChain(Color vertexColor, Color segmentColor) {
-        this.points = new LinkedList<>();
-        this.vertexColor = vertexColor;
-        this.segmentColor = segmentColor;
+        this.vertexColor = builder.vertexColor;
+        this.segmentColor = builder.segmentColor;
 
         this.isVertexVisible = true;
         this.areSegmentsVisible = true;
@@ -69,8 +50,6 @@ public class PolygonalChain {
             return;
         }
 
-        PixelWriter pixelWriter = graphicsContext.getPixelWriter();
-
         if (areSegmentsVisible) {
             Iterator<Point2D> iterator = points.iterator();
             Point2D lastPoint = iterator.next();
@@ -79,8 +58,8 @@ public class PolygonalChain {
                 Point2D point = iterator.next();
 
                 BresenhamLine.drawLine(
-                        (int) lastPoint.getX(), (int) lastPoint.getY(),
-                        (int) point.getX(), (int) point.getY(),
+                        round(lastPoint.getX()), round(lastPoint.getY()),
+                        round(point.getX()), round(point.getY()),
                         pixelPrinter, segmentColor
                 );
 
@@ -101,6 +80,40 @@ public class PolygonalChain {
             }
 
             graphicsContext.setFill(old);
+        }
+    }
+
+    public int round(double number) {
+        return (int) Math.round(number);
+    }
+
+    public static class Builder {
+        private Color vertexColor;
+        private Color segmentColor;
+
+        public Builder() {
+            this.vertexColor = DEFAULT_COLOR;
+            this.segmentColor = DEFAULT_COLOR;
+        }
+
+        public Builder withColor(Color color) {
+            this.vertexColor = color;
+            this.segmentColor = color;
+            return this;
+        }
+
+        public Builder withVertexColor(Color color) {
+            this.vertexColor = color;
+            return this;
+        }
+
+        public Builder withSegmentColor(Color color) {
+            this.segmentColor = color;
+            return this;
+        }
+
+        public PolygonalChain build() {
+            return new PolygonalChain(this);
         }
     }
 }

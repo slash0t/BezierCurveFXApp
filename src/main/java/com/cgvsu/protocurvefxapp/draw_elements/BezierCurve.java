@@ -2,17 +2,12 @@ package com.cgvsu.protocurvefxapp.draw_elements;
 
 import com.cgvsu.protocurvefxapp.PixelPrinter;
 import javafx.geometry.Point2D;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class BezierCurve {
     private static final Color DEFAULT_COLOR = Color.BLACK;
-    private static final int STEPS = 50;
     private static final double MAX_DISTANCE = 5;
 
     private final LinkedList<Point2D> points;
@@ -23,27 +18,14 @@ public class BezierCurve {
 
     private int curveDegree;
 
-    public BezierCurve() {
-        this.curveDegree = -1;
-        this.points = new LinkedList<>();
-        this.color = DEFAULT_COLOR;
-    }
+    private BezierCurve(Builder builder) {
+        this.curveDegree = builder.curveDegree;
+        this.color = builder.color;
+        this.points = builder.points;
 
-    public BezierCurve(Color color) {
-        this.curveDegree = -1;
-        this.points = new LinkedList<>();
-        this.color = color;
-    }
-
-    public BezierCurve(List<Point2D> points) {
-        this.curveDegree = points.size() - 1;
-
-        this.points = new LinkedList<>();
-        this.points.addAll(points);
-
-        this.color = DEFAULT_COLOR;
-
-        recountCombinations();
+        if (curveDegree >= 0) {
+            recountCombinations();
+        }
     }
 
     private void recountCombinations() {
@@ -98,9 +80,8 @@ public class BezierCurve {
     public void draw(PixelPrinter pixelPrinter) {
         Stack<Double> drawStack = new Stack<>();
 
-        for (int i = STEPS - 1; i >= 0; i--) {
-            drawStack.add((double) i);
-        }
+        drawStack.add(1.0);
+        drawStack.add(0.0);
 
         Point2D lastPoint = null;
         double lastT = 0;
@@ -108,18 +89,12 @@ public class BezierCurve {
         while (drawStack.size() > 0) {
             double currT = drawStack.pop();
 
-            double[] baseCoefficient = countBaseCoefficients(currT / (STEPS - 1));
+            double[] baseCoefficient = countBaseCoefficients(currT);
 
             double x = 0, y = 0;
             Iterator<Point2D> iterator = points.iterator();
             for (int j = 0; j <= curveDegree; j++) {
-                double combination;
-                if (j > curveDegree - j) {
-                    combination = combinations[curveDegree - j];
-                } else {
-                    combination = combinations[j];
-                }
-
+                double combination = combinations[Math.min(curveDegree - j, j)];
                 double currBase = baseCoefficient[j] * combination;
 
                 Point2D point = iterator.next();
@@ -137,8 +112,8 @@ public class BezierCurve {
                     drawStack.add((lastT + currT) / 2);
                 } else {
                     BresenhamLine.drawLine(
-                            (int) lastPoint.getX(), (int) lastPoint.getY(),
-                            (int) x, (int) y,
+                            round(lastPoint.getX()), round(lastPoint.getY()),
+                            round(x), round(y),
                             pixelPrinter, color
                     );
 
@@ -148,6 +123,37 @@ public class BezierCurve {
             if (drawStack.size() > 0 && drawStack.peek() > currT) {
                 lastPoint = new Point2D(x, y);
             }
+        }
+    }
+
+    public int round(double number) {
+        return (int) Math.round(number);
+    }
+
+    public static class Builder {
+        private int curveDegree;
+        private Color color;
+        private LinkedList<Point2D> points;
+
+        public Builder() {
+            this.curveDegree = -1;
+            this.color = DEFAULT_COLOR;
+            this.points = new LinkedList<>();
+        }
+
+        public Builder withColor(Color color) {
+            this.color = color;
+            return this;
+        }
+
+        public Builder withPoints(Collection<Point2D> points) {
+            this.points = new LinkedList<>(points);
+            this.curveDegree = points.size() - 1;
+            return this;
+        }
+
+        public BezierCurve build() {
+            return new BezierCurve(this);
         }
     }
 }
